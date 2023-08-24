@@ -9,23 +9,17 @@ This extension extends SAP Commerce OCC extension with a new Rest Service that r
 
 ### 2. Add the Coveocc extension to the config/localextensions.xml file
 
-### 3. add coveo org url and api key with impersonate privilege in coveocc/project.properties
-
-```
-# coveo platform url  ex https://platformstg.cloud.coveo.com
-coveocc.org.url =
-# org api key with impersonate privilege
-coveocc.org.api.key=
-```
-
-### 4. Build
+### 3. Build
 
 ```
 ant clean all
 ```
 
-### 5. Start the server
+### 4. Start the server
 
+### 5. run update in hac with the selection of coveocc extension to create new introduced fields 
+
+### 5. add coveo org url and api key with impersonate privilege in the backoffice , WCMS/website choose the corresponding site  in Coveo Api Key and Coveo Platform URL(ex https://platformstg.cloud.coveo.com) fields
 
 ## Test
 
