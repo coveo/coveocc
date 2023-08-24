@@ -1,0 +1,31 @@
+# Folders to ignore, whatever the place they are
+classes
+gensrc
+
+
+
+#IDE files
+.idea
+idea-module-files
+*.iml
+
+
+# Filename patterns to ignore
+*.class
+build.xml
+Generated*.java
+platformhome.properties
+*testclasses.xml
+extensioninfo.xsd
+*hmc.jar
+hmc.xsd
+items.xsd
+beans.xsd
+ruleset.xml
+*.log
+.pmd
+*build.number
+.DS_STORE
+
+
+
