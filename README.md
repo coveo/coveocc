@@ -1,26 +1,51 @@
-# coveocc
-SAP Coveo OCC extension 
+# SAP Coveo OCC extension
 
-This extension extends SAP Commerce OCC extension with a new Rest Service that returns [Coveo Search Token Authentication](https://docs.coveo.com/en/56/build-a-search-ui/use-search-token-authentication)
+This extension adds a new API to the *SAP Commerce OCC extension* to use [Coveo search token authentication](https://docs.coveo.com/en/56/build-a-search-ui/use-search-token-authentication) in your project.
 
 ## Installation
 
-### 1. Copy extension folder to bin/custom directory
+1. Copy the extension folder to the `hybris/bin/custom` directory of your project.
 
-### 2. Add the Coveocc extension to the config/localextensions.xml file
+1. In the project folder, open the `hybris/config/localextensions.xml` file and add the `coveocc` extension:
 
-### 3. Build
+   ```xml
+   <extension name='coveocc' />
+   ```
 
-```
-ant clean all
-```
+1. From the root of your project folder, run the following command:
 
-### 4. Start the server
+   ```bash
+   ant clean all
+   ```
 
-### 5. run update in hac with the selection of coveocc extension to create new introduced fields 
+1. Start the server by executing the `hybris/bin/platform/hybrisserver.sh` script.
 
-### 5. add coveo org url and api key with impersonate privilege in the backoffice , WCMS/website choose the corresponding site  in Coveo Api Key and Coveo Platform URL(ex https://platformstg.cloud.coveo.com) fields
+1. Update the project in the Hybris Administration Console:
 
-## Test
+   1. Open the Hybris Administration console at https://localhost:9002/platform/update.
+   
+   1. Find and select the checkboxes for `coveoccc` extension to create the newly introduced fields.
 
-to test locally you can use  swagger on this [url](https://localhost:9002/occ/v2/swagger-ui.html#/search-token-controller/getSearchToken)
+   1. At the top of the page, click the *Update* button.
+
+1. Set the Coveo credentials in the Backoffice Administration Cockpit at https://localhost:9002/backoffice:
+
+   1. In the Administration Cockpit, go to the **WCMS → Website** page.
+
+   1. In the list of websites, double-click the required website.
+
+   1. Switch to the *Administration* tab.
+
+   1. Fill in the following fields:
+
+      * *Coveo Platform URL*.
+
+        For production, it must be `https://platform.cloud.coveo.com/`. For a testing environment, it can be `https://platformstg.cloud.coveo.com`.
+
+      * *Coveo* [*API KEY*](https://docs.coveo.com/en/1718). The API key must have the `Impersonate` privilege granted.
+
+        See details in link:{site-baseurl}/1707#search-impersonate-domain[Impersonate domain].
+
+## Local testing
+
+To test retrieving a search token, you can use a Swagger UI that's available at `https://localhost:9002/occ/v2/swagger-ui.html`, where you can find and test the `getSearchToken` endpoint.
