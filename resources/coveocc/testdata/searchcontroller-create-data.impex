@@ -1,0 +1,13 @@
+INSERT OAuthClientDetails; clientId[unique = true]; resourceIds; scope; authorizedGrantTypes; authorities; clientSecret; registeredRedirectUri
+;trusted_client;hybris;basic;authorization_code,refresh_token,password,client_credentials;ROLE_CUSTOMERGROUP;secret;http://localhost:9001/authorizationserver/oauth2_callback
+
+INSERT User; uid[unique=true]
+;trusted_client
+
+INSERT Customer; uid[unique=true]; password
+;test@email.com;password
+
+INSERT BaseSite; uid; coveoApiKey; coveoPlatformUrl
+;testbasesite; test-key; http://localhost:8200
+
+

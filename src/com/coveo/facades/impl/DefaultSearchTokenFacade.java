@@ -7,38 +7,44 @@ import com.coveo.constants.CoveoccConstants;
 import com.coveo.facades.SearchTokenFacade;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
 import de.hybris.platform.site.BaseSiteService;
-import org.springframework.http.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultSearchTokenFacade implements SearchTokenFacade {
 
-    public static final String SEARCH_TOKEN_PATH = "/rest/search/v2/token";
+    @Value("${coveocc.searchtoken.path}")
+    private String searchTokenPath;
 
     @Resource(name="baseSiteService")
     private BaseSiteService baseSiteService;
 
+    @Resource(name="searchTokenRestTemplate")
+    private RestTemplate searchTokenRestTemplate;
+
     @Override
-    public ResponseEntity getSearchToken(String baseSiteId , String userId, String searchHub, long maxAgeMilliseconds) {
+    public ResponseEntity<SearchTokenWsDTO> getSearchToken(String baseSiteId , String userId, String searchHub, long maxAgeMilliseconds) {
 
         BaseSiteModel baseSite = baseSiteService.getBaseSiteForUID(baseSiteId);
 
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = buildHeaders(baseSite.getCoveoApiKey());
 
         SearchTokenBody searchTokenBody = buildRequestBody(userId, searchHub);
 
-        URI uri = URI.create(baseSite.getCoveoPlatformUrl() + SEARCH_TOKEN_PATH);
+        URI uri = URI.create(baseSite.getCoveoPlatformUrl() + searchTokenPath);
 
         HttpEntity<SearchTokenBody> requestEntity = new HttpEntity<>(searchTokenBody, headers);
-        ResponseEntity<SearchTokenWsDTO> responseEntity = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SearchTokenWsDTO.class);
-
-        return responseEntity;
+        return searchTokenRestTemplate.exchange(uri, HttpMethod.POST, requestEntity, SearchTokenWsDTO.class);
     }
 
     private HttpHeaders buildHeaders(String coveoApiKey) {
@@ -55,7 +61,7 @@ public class DefaultSearchTokenFacade implements SearchTokenFacade {
         user.setName(userId);
         user.setType("User");
         user.setProvider("Email Security Provider");
-        searchTokenBody.setUserIds(Arrays.asList(user));
+        searchTokenBody.setUserIds(List.of(user));
         searchTokenBody.setSearchHub(searchHub);
         searchTokenBody.setValidFor(TimeUnit.SECONDS.toMillis(CoveoccConstants.SEARCH_TOKEN_MAX_AGE_SECONDS));
 

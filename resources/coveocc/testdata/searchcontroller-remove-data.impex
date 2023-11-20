@@ -1,0 +1,11 @@
+REMOVE User; uid[unique=true]
+;trusted_client
+
+REMOVE OAuthClientDetails; clientId[unique=true]
+;trusted_client
+
+REMOVE Customer; uid[unique=true]
+;test@email.com
+
+REMOVE BaseSite; uid
+;testbasesite
