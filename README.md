@@ -48,4 +48,7 @@ This extension adds a new API to the *SAP Commerce OCC extension* to use [Coveo 
 
 ## Local testing
 
-To test retrieving a search token, you can use a Swagger UI that's available at `https://localhost:9002/occ/v2/swagger-ui.html`, where you can find and test the `getSearchToken` endpoint.
+To test retrieving a search token, you can use a Swagger UI that's available at `https://localhost:9002/occ/v2/swagger-ui.html`, where you can find and test the `/coveo/token/{searchHub}` endpoint.
+
+This endpoint returns a JSON object with the token property that contains the search token. 
+Depending on the user type, the endpoint returns a JWT token for a logged-in user or an anonymous user.
