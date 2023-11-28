@@ -4,10 +4,11 @@
 --><extensioninfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="extensioninfo.xsd">
         	
     
-    <extension abstractclassprefix="Generated" classprefix="Coveocc" description="coveocc extension" jaloLogicFree="true" managername="CoveoccManager" managersuperclass="de.hybris.platform.jalo.extension.Extension" name="coveocc">
+    <extension abstractclassprefix="Generated" classprefix="Coveocc" description="coveocc extension" jaloLogicFree="true" managername="CoveoccManager" managersuperclass="de.hybris.platform.jalo.extension.Extension" name="coveocc" usemaven="true">
                 		
 
         <requires-extension name="commercewebservices"/>
+        <requires-extension name="swaggerintegration"/>
                 		
         
         <coremodule generated="true" manager="com.coveo.jalo.CoveoccManager" packageroot="com.coveo"/>
