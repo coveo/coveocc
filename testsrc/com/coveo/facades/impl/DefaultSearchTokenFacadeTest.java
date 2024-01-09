@@ -4,6 +4,10 @@ import com.coveo.SearchTokenBody;
 import com.coveo.SearchTokenWsDTO;
 import de.hybris.bootstrap.annotations.UnitTest;
 import de.hybris.platform.basecommerce.model.site.BaseSiteModel;
+import de.hybris.platform.core.model.user.UserGroupModel;
+import de.hybris.platform.core.model.user.UserModel;
+import de.hybris.platform.europe1.enums.UserPriceGroup;
+import de.hybris.platform.servicelayer.user.UserService;
 import de.hybris.platform.site.BaseSiteService;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,9 +24,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -38,6 +46,8 @@ public class DefaultSearchTokenFacadeTest {
     private static final String TEST_SEARCH_HUB = "testSearchHub";
     private static final String TEST_TOKEN = "testToken";
     private static final Long TEST_MAX_AGE_MS = 3000L;
+    private static final String PRICE_GROUP1 = "group1";
+    private static final String PRICE_GROUP2 = "group2";
 
     @InjectMocks
     private final DefaultSearchTokenFacade searchTokenFacade = new DefaultSearchTokenFacade();
@@ -47,6 +57,9 @@ public class DefaultSearchTokenFacadeTest {
 
     @Mock
     private RestTemplate searchTokenRestTemplate;
+
+    @Mock
+    private UserService userService;
 
     @Mock
     private BaseSiteModel mockBaseSite;
@@ -70,6 +83,18 @@ public class DefaultSearchTokenFacadeTest {
         when(mockBaseSite.getCoveoPlatformUrl()).thenReturn(TEST_COVEO_BASE_URL);
         when(mockBaseSite.getCoveoApiKey()).thenReturn(TEST_COVEO_API_KEY);
         when(baseSiteService.getBaseSiteForUID(TEST_BASE_SITE_ID)).thenReturn(mockBaseSite);
+        UserPriceGroup priceGroup1 = UserPriceGroup.valueOf(PRICE_GROUP1);
+        UserPriceGroup priceGroup2 = UserPriceGroup.valueOf(PRICE_GROUP2);
+        UserModel user = new UserModel();
+        user.setEurope1PriceFactory_UPG(priceGroup1);
+        when(userService.getUserForUID(TEST_USER_ID)).thenReturn(user);
+        UserGroupModel group1 = new UserGroupModel();
+        group1.setUserPriceGroup(priceGroup1);
+        UserGroupModel group2 = new UserGroupModel();
+        group2.setUserPriceGroup(priceGroup2);
+        UserGroupModel group3 = new UserGroupModel();
+        Set<UserGroupModel> userGroups = new HashSet<>(Arrays.asList(group1, group2, group3));
+        when(userService.getAllUserGroupsForUser(user)).thenReturn(userGroups);
 
         final SearchTokenWsDTO token = new SearchTokenWsDTO();
         token.setToken(TEST_TOKEN);
@@ -99,7 +124,10 @@ public class DefaultSearchTokenFacadeTest {
         final SearchTokenBody body = httpEntity.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getSearchHub()).isEqualTo(TEST_SEARCH_HUB);
-        assertThat(body.getUserIds()).hasSize(1);
-        assertThat(body.getUserIds().get(0).getName()).isEqualTo(TEST_USER_ID);
+        assertThat(body.getUserIds()).hasSize(3).extracting("name", "type")
+                .containsExactlyInAnyOrder(
+                        tuple(TEST_USER_ID, "User"),
+                        tuple(PRICE_GROUP1, "Group"),
+                        tuple(PRICE_GROUP2, "Group"));
     }
 }

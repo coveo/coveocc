@@ -15,6 +15,7 @@ import de.hybris.platform.impex.jalo.ImpExException;
 import de.hybris.platform.oauth2.constants.OAuth2Constants;
 import de.hybris.platform.servicelayer.ServicelayerTest;
 
+import de.hybris.platform.servicelayer.config.ConfigurationService;
 import de.hybris.platform.webservicescommons.testsupport.client.WsRequestBuilder;
 import de.hybris.platform.webservicescommons.testsupport.client.WsSecuredRequestBuilder;
 import de.hybris.platform.webservicescommons.testsupport.server.NeedsEmbeddedServer;
@@ -29,6 +30,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.annotation.Resource;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -50,6 +52,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @IntegrationTest
 public class SearchTokenControllerTest extends ServicelayerTest
 {
+	private static final String ALLOWED_USER_GROUP_IDS_PROPERTY = "coveocc.jwt.allowed.usergroup.ids";
+	private static final String TEST_GROUP_ID_1 = "userPriceGroup1";
+	private static final String TEST_GROUP_ID_2 = "userPriceGroup2";
 	private static final int TOKEN_SERVICE_PORT = 8200;
 	private static final String TOKEN_SERVICE_PATH = "/rest/search/v2/token";
 	private static final String JWT_SECRET = "asdfSFS34wfsdfsdfSDSD32dfsddDDerQSNCK34SOWEK5354fdgdf4";
@@ -60,6 +65,7 @@ public class SearchTokenControllerTest extends ServicelayerTest
 	private static final String JWT_ROLE = "role";
 	private static final String JWT_PROVIDER = "provider";
 	private static final String JWT_SOURCE = "source";
+	private static final String JWT_GROUP = "group";
 	private static final String TEST_USER = "test@email.com";
 	private static final String TEST_USER_PASSWORD = "password";
 	private static final String ANON_USER = "anonymous";
@@ -74,6 +80,9 @@ public class SearchTokenControllerTest extends ServicelayerTest
 	private WsSecuredRequestBuilder wsSecuredRequestBuilder;
 
 	private static WsRequestBuilder wsRequestBuilder;
+
+	@Resource(name="configurationService")
+	private ConfigurationService configurationService;
 
 	@BeforeClass
 	public static void initialSetUp() throws IOException {
@@ -108,6 +117,7 @@ public class SearchTokenControllerTest extends ServicelayerTest
 	@After
 	public void tearDown () throws ImpExException {
 		importCsv("/coveocc/testdata/searchcontroller-remove-data.impex", "utf-8");
+		configurationService.getConfiguration().setProperty(ALLOWED_USER_GROUP_IDS_PROPERTY, "");
 	}
 
 	@AfterClass
@@ -150,7 +160,9 @@ public class SearchTokenControllerTest extends ServicelayerTest
 		validateCommonValues(jwt);
 
 		final String sub = jwt.getBody().getSubject();
+		final String[] group = jwt.getBody().get(JWT_GROUP, String.class).split(",");
 		assertThat(sub).isEqualTo(TEST_USER);
+		assertThat(group).hasSize(2).contains(TEST_GROUP_ID_1, TEST_GROUP_ID_2);
 	}
 
 	private static void validateCommonValues(final Jws<Claims> jwt) {
@@ -175,20 +187,26 @@ public class SearchTokenControllerTest extends ServicelayerTest
 			try (final OutputStream os = exchange.getResponseBody(); final InputStream is = exchange.getRequestBody()) {
 				final String result = IOUtils.toString(is, StandardCharsets.UTF_8);
 				final ObjectMapper mapper = new ObjectMapper();
-				final Map<String, Object> payloadMap = mapper.readValue(result, new TypeReference<Map<String, Object>>() {});
+				final Map<String, Object> payloadMap = mapper.readValue(result, new TypeReference<>() {});
 
 				String sub = null;
 				String role = null;
 				String provider = null;
+				StringBuilder group = new StringBuilder();
 				String source = (String) payloadMap.getOrDefault("searchHub", INVALID);
 
 				if (payloadMap.containsKey("userIds")) {
 					final List<Map<String, String>> userIds = (List<Map<String, String>>) payloadMap.get("userIds");
 					if (!userIds.isEmpty()) {
-						final Map<String, String> userDetails = userIds.get(0);
-						sub = userDetails.getOrDefault("name", INVALID);
-						role = userDetails.getOrDefault("type", INVALID);
-						provider = userDetails.getOrDefault("provider", INVALID);
+						for (Map<String, String> userDetails: userIds) {
+							if (userDetails.getOrDefault("type", INVALID).equals("User")) {
+								sub = userDetails.getOrDefault("name", INVALID);
+								role = userDetails.getOrDefault("type", INVALID);
+								provider = userDetails.getOrDefault("provider", INVALID);
+							} else {
+								group.append(group.isEmpty() ? "" : ",").append(userDetails.getOrDefault("name", INVALID));
+							}
+						}
 					}
 				}
 
@@ -197,6 +215,7 @@ public class SearchTokenControllerTest extends ServicelayerTest
 						.claim(JWT_ROLE, role)
 						.claim(JWT_PROVIDER, provider)
 						.claim(JWT_SOURCE, source)
+						.claim(JWT_GROUP, group.toString())
 						.setSubject(sub)
 						.setId(UUID.randomUUID().toString())
 						.setIssuedAt(now)
